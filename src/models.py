@@ -118,6 +118,7 @@ class DQNModel:
         self.model = self._build_model()
         self.target_model = self._build_model()
         self.update_target_model()
+        self.loss_history = []  # Lưu loss qua các bước train
     
     def _build_model(self):
         """Xây dựng DQN model"""
@@ -183,7 +184,13 @@ class DQNModel:
             else:
                 target[i][actions[i]] = rewards[i] + self.gamma * np.amax(next_target[i])
         
-        self.model.fit(states, target, epochs=1, verbose=0)
+        # Lưu loss sau mỗi lần fit
+        history = self.model.fit(states, target, epochs=1, verbose=0)
+        loss = history.history['loss'][0]
+        self.loss_history.append(loss)
+        # Lưu loss ra file để vẽ biểu đồ sau
+        with open('loss_log.txt', 'a', encoding='utf-8') as f:
+            f.write(f"{loss}\n")
         
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
